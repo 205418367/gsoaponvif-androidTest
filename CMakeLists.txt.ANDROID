@@ -1,0 +1,43 @@
+cmake_minimum_required(VERSION 3.10)
+project(ONVIF_CLEINT)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -o0 -g -ggdb -Wall -w -fPIC -fno-use-cxa-atexit -fexceptions")
+add_definitions(-DWITH_NONAMESPACES -DWITH_DOM -DWITH_OPENSSL -DSOAP_DEBUG)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build)
+
+include_directories(${PROJECT_SOURCE_DIR}/
+                    ${PROJECT_SOURCE_DIR}/proxy/include
+                    ${PROJECT_SOURCE_DIR}/onvif
+                    ${PROJECT_SOURCE_DIR}/plugin
+                    ${PROJECT_SOURCE_DIR}/openssl
+                 )
+set(ProxyOBJ proxy/src/soapDeviceBindingProxy.cpp
+    proxy/src/soapMediaBindingProxy.cpp
+    proxy/src/soapPTZBindingProxy.cpp
+    proxy/src/soapPullPointSubscriptionBindingProxy.cpp
+    proxy/src/soapRemoteDiscoveryBindingProxy.cpp
+    )
+set(PluginOBJ
+    plugin/wsaapi.cpp
+    plugin/wsseapi.cpp
+    plugin/threads.cpp
+    plugin/duration.cpp
+    plugin/smdevp.cpp
+    plugin/mecevp.cpp
+    plugin/dom.cpp
+    plugin/stdsoap2.cpp
+    )
+set(Onvifobj
+    onvif/soapC.cpp
+    onvif/soapClient.cpp
+    onvif/wsdd.nsmap
+    )
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rdlib/armeabi-v7a)    
+add_executable(${PROJECT_NAME} proxy/main.cpp proxy/onvifdevice.cpp ${ProxyOBJ} ${PluginOBJ} ${Onvifobj})
+target_link_libraries(${PROJECT_NAME} ssl crypto)
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "ClientOnvif")
+install(TARGETS ${PROJECT_NAME} DESTINATION ${LIBRARY_OUTPUT_PATH})   
+
+
+
+
