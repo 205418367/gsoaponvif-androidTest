@@ -33,5 +33,3 @@ set(Onvifobj
 add_executable(client proxy/main.cpp proxy/onvifdevice.cpp 
 	        proxy/onvifcomm.cpp ${ProxyOBJ} ${PluginOBJ} ${Onvifobj})
 target_link_libraries(client ssl crypto avcodec avformat avutil swscale)
-
-#test

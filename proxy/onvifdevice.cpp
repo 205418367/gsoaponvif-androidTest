@@ -14,24 +14,123 @@ OnvifDevice::OnvifDevice(string url,string username,string passwd):m_deviceurl(u
 OnvifDevice::~OnvifDevice(){}
 
 /************************************************************************
+**函数：ptzPresetTour
+**功能：获取Preset Options
+************************************************************************/
+int OnvifDevice::ptzPresetTour(vector<string> &PresetToken){
+    int result = 0;
+    std::string strProfileToken;
+    result = getProfile(strProfileToken);
+    if (result!=SOAP_OK){
+         return -1;
+    }
+    std::string PTZAddr;
+    result = getPTZUrl(PTZAddr);
+    if (result!=SOAP_OK){
+         return -1;
+    }    
+    PTZBindingProxy proxyPTZ;
+    proxyPTZ.soap_endpoint = PTZAddr.c_str();
+    soap_register_plugin(proxyPTZ.soap, soap_wsse);
+    if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyPTZ.soap, NULL, m_username.c_str(), m_passwd.c_str())){
+         return -1;
+    }
+    _tptz__GetPresetTourOptions         preset;
+    _tptz__GetPresetTourOptionsResponse response;
+    preset.ProfileToken = strProfileToken;
+    result = proxyPTZ.GetPresetTourOptions(proxyPTZ.soap_endpoint,NULL,&preset, &response);
+    if (SOAP_OK != result){
+        return -1;
+    }
+    PresetToken = response.Options->TourSpot->PresetDetail->PresetToken;
+    return SOAP_OK;
+}
+
+/************************************************************************
+**函数：ptzPreset
+**功能：控制预置位
+************************************************************************/
+int OnvifDevice::ptzPreset(int command, string presetToken){
+    int result = 0;
+    std::string strProfileToken;
+    result = getProfile(strProfileToken);
+    if (result!=SOAP_OK){
+         return -1;
+    }
+    std::string PTZAddr;
+    result = getPTZUrl(PTZAddr);
+    if (result!=SOAP_OK){
+         return -1;
+    }    
+    PTZBindingProxy proxyPTZ;
+    proxyPTZ.soap_endpoint = PTZAddr.c_str();
+    soap_register_plugin(proxyPTZ.soap, soap_wsse);
+    if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyPTZ.soap, NULL, m_username.c_str(), m_passwd.c_str())){
+         return -1;
+    }
+    if (command == GOTO){
+        _tptz__GotoPreset preset;
+        _tptz__GotoPresetResponse response;
+        preset.ProfileToken = strProfileToken;
+        preset.PresetToken = presetToken;
+        preset.Speed = soap_new_tt__PTZSpeed(proxyPTZ.soap, -1);
+        preset.Speed->PanTilt = soap_new_tt__Vector2D(proxyPTZ.soap, -1);
+        std::string str="http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace";
+        preset.Speed->PanTilt->space =&str;
+        preset.Speed->Zoom = soap_new_tt__Vector1D(proxyPTZ.soap, -1);
+        preset.Speed->PanTilt->x = -((float)speed / 1);
+        preset.Speed->PanTilt->y = 0;
+
+        result = proxyPTZ.GotoPreset(proxyPTZ.soap_endpoint,NULL,&preset, &response);
+        if (SOAP_OK != result){
+            cout<<"GOTO FAIL"<<endl;
+            return -1;
+        }
+        cout<<"GOTO SUCC"<<endl;
+    }else if (command == SET){
+        _tptz__SetPreset preset;
+        _tptz__SetPresetResponse response;
+        preset.ProfileToken = strProfileToken;
+        preset.PresetToken = &presetToken;
+        result = proxyPTZ.SetPreset(proxyPTZ.soap_endpoint,NULL,&preset, &response);
+        if (SOAP_OK != result){
+             cout<<"SET FAIL"<<endl;
+             return -1;
+        }
+        cout<<"SET SUCC"<<endl;
+    }else if (command == REMOVE){
+        _tptz__RemovePreset preset;
+        _tptz__RemovePresetResponse response;
+        preset.ProfileToken = strProfileToken;
+        preset.PresetToken = presetToken;
+        result = proxyPTZ.RemovePreset(proxyPTZ.soap_endpoint,NULL,&preset, &response);
+        if (SOAP_OK != result){
+             cout<<"REMOVE FAIL"<<endl;
+             return -1;
+         }
+         cout<<"REMOVE SUCC"<<endl;
+    }
+    return SOAP_OK;
+}
+
+/************************************************************************
 **函数：ptzRelativeMove
 **功能：相机控制
 ************************************************************************/
 int OnvifDevice::ptzRelativeMove(int command){
-    std::string strMediaAddr;
     int result = 0;
-    result = getMediaUrl(strMediaAddr);
-    if (result!=SOAP_OK){
-        return -1;
-    }
     std::string strProfileToken;
-    result = getProfile(strMediaAddr.c_str(), strProfileToken);
+    result = getProfile(strProfileToken);
     if (result!=SOAP_OK){
          return -1;
     }
-
+    std::string PTZAddr;
+    result = getPTZUrl(PTZAddr);
+    if (result!=SOAP_OK){
+         return -1;
+    }    
     PTZBindingProxy proxyPTZ;
-    proxyPTZ.soap_endpoint = m_deviceurl.c_str();
+    proxyPTZ.soap_endpoint = PTZAddr.c_str();
     soap_register_plugin(proxyPTZ.soap, soap_wsse);
     if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyPTZ.soap, NULL, m_username.c_str(), m_passwd.c_str())){
          return -1;
@@ -46,40 +145,39 @@ int OnvifDevice::ptzRelativeMove(int command){
     ptz_req.Translation->PanTilt = (struct tt__Vector2D *)soap_new_tt__Vector2D(proxyPTZ.soap, -1);
     tt__Vector1D* zoom = (struct tt__Vector1D *)soap_new_tt__Vector1D(proxyPTZ.soap, -1);
     ptz_req.Translation->Zoom = zoom;
-    std::string str="链接动态库http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace";
+    std::string str="http://www.onvif.org/ver10/tptz/PanTiltSpaces/TranslationGenericSpace";
     ptz_req.Translation->PanTilt->space =&str;
     std::string str2 ="http://www.onvif.org/ver10/tptz/ZoomSpaces/TranslationGenericSpace";
     ptz_req.Translation->Zoom->space = &str2;
 
     switch (command){
     case LEFT:
-        ptz_req.Translation->PanTilt->x = -((float)speed / 10);
+        ptz_req.Translation->PanTilt->x = -((float)speed / 1);
         ptz_req.Translation->PanTilt->y = 0;
         break;
     case RIGHT:
-        ptz_req.Translation->PanTilt->x = ((float)speed / 10);
+        ptz_req.Translation->PanTilt->x = ((float)speed / 1);
         ptz_req.Translation->PanTilt->y = 0;
         break;
     case UP:
         ptz_req.Translation->PanTilt->x = 0;
-        ptz_req.Translation->PanTilt->y = ((float)speed / 10);
+        ptz_req.Translation->PanTilt->y = ((float)speed / 1);
         break;
     case DOWN:
         ptz_req.Translation->PanTilt->x = 0;
-        ptz_req.Translation->PanTilt->y = -((float)speed / 10);
+        ptz_req.Translation->PanTilt->y = -((float)speed / 1);
         break;
     case ZOOMIN:
-        ptz_req.Translation->Zoom->x = ((float)speed / 10);
+        ptz_req.Translation->Zoom->x = ((float)speed / 1);
         break;
     case ZOOMOUT:
-        ptz_req.Translation->Zoom->x = -((float)speed / 10);
+        ptz_req.Translation->Zoom->x = -((float)speed / 1);
         break;
     default:
         break;
     }
     result = proxyPTZ.RelativeMove(proxyPTZ.soap_endpoint,NULL,&ptz_req, &ptz_rep);
-    if (SOAP_OK != result)
-    {
+    if (SOAP_OK != result){
       cout<<"##fail##"<<endl;
       return -1;
     }
@@ -89,70 +187,63 @@ int OnvifDevice::ptzRelativeMove(int command){
 
 /************************************************************************
 **函数：ptzContinuousMove
-**功能：相机控制
+**功能：持续控制
 ************************************************************************/
 int OnvifDevice::ptzContinuousMove(int command){
-    std::string strMediaAddr;
-    int result;
-    result = getMediaUrl(strMediaAddr);
-    if (result!=SOAP_OK){
-		return -1;
-    }
+    int result = 0;
     std::string strProfileToken;
-    result = getProfile(strMediaAddr.c_str(), strProfileToken);
-    if (result!=SOAP_OK){
-		return -1;
+    result = getProfile(strProfileToken);
+    if (result != SOAP_OK){
+        return -1;
     }
-
+    std::string PTZAddr;
+    result = getPTZUrl(PTZAddr);
+    if (result!=SOAP_OK){
+         return -1;
+    }   
     PTZBindingProxy proxyPTZ;
-    proxyPTZ.soap_endpoint = m_deviceurl.c_str();
+    proxyPTZ.soap_endpoint = PTZAddr.c_str();
     soap_register_plugin(proxyPTZ.soap, soap_wsse);
-    if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyPTZ.soap, NULL,  m_username.c_str(), m_passwd.c_str()))
-    {
+    if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyPTZ.soap, NULL,  m_username.c_str(), m_passwd.c_str())){
 		return -1;
     }
     _tptz__ContinuousMove continuousMove;
     _tptz__ContinuousMoveResponse response;
-
     continuousMove.ProfileToken = const_cast<char *>(strProfileToken.c_str());
-    tt__PTZSpeed* velocity = soap_new_tt__PTZSpeed(proxyPTZ.soap, -1);
-    continuousMove.Velocity = velocity;
-    tt__Vector2D* panTilt = soap_new_tt__Vector2D(proxyPTZ.soap, -1);
-    continuousMove.Velocity->PanTilt = panTilt;
+    continuousMove.Velocity = soap_new_tt__PTZSpeed(proxyPTZ.soap, -1);
+    continuousMove.Velocity->PanTilt = soap_new_tt__Vector2D(proxyPTZ.soap, -1);
     std::string str="http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace";
     continuousMove.Velocity->PanTilt->space =&str;  
-    tt__Vector1D* zoom = soap_new_tt__Vector1D(proxyPTZ.soap, -1);
-    continuousMove.Velocity->Zoom = zoom;
+    continuousMove.Velocity->Zoom = soap_new_tt__Vector1D(proxyPTZ.soap, -1);
 
     switch (command){
     case LEFT:
-    	continuousMove.Velocity->PanTilt->x = -((float)speed / 10);
+    	continuousMove.Velocity->PanTilt->x = -((float)speed / 1);
     	continuousMove.Velocity->PanTilt->y = 0;
     	break;
     case RIGHT:
-    	continuousMove.Velocity->PanTilt->x = ((float)speed / 10);
+    	continuousMove.Velocity->PanTilt->x = ((float)speed / 1);
     	continuousMove.Velocity->PanTilt->y = 0;
     	break;
     case UP:
     	continuousMove.Velocity->PanTilt->x = 0;
-    	continuousMove.Velocity->PanTilt->y = ((float)speed / 10);
+    	continuousMove.Velocity->PanTilt->y = ((float)speed / 1);
     	break;
     case DOWN:
     	continuousMove.Velocity->PanTilt->x = 0;
-    	continuousMove.Velocity->PanTilt->y = -((float)speed / 10);
+    	continuousMove.Velocity->PanTilt->y = -((float)speed / 1);
     	break;
     case ZOOMIN:
-    	continuousMove.Velocity->Zoom->x = ((float)speed / 10);
+    	continuousMove.Velocity->Zoom->x = ((float)speed / 1);
     	break;
     case ZOOMOUT:
-    	continuousMove.Velocity->Zoom->x = -((float)speed / 10);
+    	continuousMove.Velocity->Zoom->x = -((float)speed / 1);
     	break;
     default:
     	break;
     }
-    result = proxyPTZ.ContinuousMove(m_deviceurl.c_str(),NULL,&continuousMove, &response);
-    if (SOAP_OK != result)
-    {
+    result = proxyPTZ.ContinuousMove(proxyPTZ.soap_endpoint,NULL,&continuousMove, &response);
+    if (SOAP_OK != result){
       cout<<"##fail##"<<endl;
       return -1;
     }
@@ -164,19 +255,19 @@ int OnvifDevice::ptzContinuousMove(int command){
 **功能：相机控制停止
 ************************************************************************/
 int OnvifDevice::ptzContinuousStop(){
-    std::string strMediaAddr;
-    int result;
-    result = getMediaUrl(strMediaAddr);
-    if (result!=SOAP_OK){
-		return -1;
-    }
+    int result = 0;
     std::string strProfileToken;
-    result = getProfile(strMediaAddr.c_str(), strProfileToken);
+    result = getProfile(strProfileToken);
     if (result!=SOAP_OK){
 		return -1;
     }
+    std::string PTZAddr;
+    result = getPTZUrl(PTZAddr);
+    if (result!=SOAP_OK){
+         return -1;
+    }   
     PTZBindingProxy proxyPTZ;
-    proxyPTZ.soap_endpoint = m_deviceurl.c_str();
+    proxyPTZ.soap_endpoint = PTZAddr.c_str();
     soap_register_plugin(proxyPTZ.soap, soap_wsse);
     if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyPTZ.soap, NULL,  m_username.c_str(), m_passwd.c_str())){
 		return -1;
@@ -184,7 +275,7 @@ int OnvifDevice::ptzContinuousStop(){
     _tptz__Stop stopImmediate;
     _tptz__StopResponse response;
     stopImmediate.ProfileToken = const_cast<char *>(strProfileToken.c_str());      
-    result = proxyPTZ.Stop(m_deviceurl.c_str(),NULL,&stopImmediate, &response);
+    result = proxyPTZ.Stop(proxyPTZ.soap_endpoint,NULL,&stopImmediate, &response);
     if (SOAP_OK != result){
       cout<<"##fail##"<<endl;
       return -1;
@@ -196,71 +287,80 @@ int OnvifDevice::ptzContinuousStop(){
 **函数：getRTSPUrl
 **功能：获取RTSP地址
 ************************************************************************/
-int OnvifDevice::getRTSPUrl(const char*mediaAddr,string&rtspUrl){
-  if(mediaAddr==NULL){
-    return -1;
-  }
-  MediaBindingProxy proxyMedia;
-  proxyMedia.soap_endpoint = mediaAddr;
-  soap_register_plugin(proxyMedia.soap, soap_wsse);
-	if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyMedia.soap, NULL, m_username.c_str(), m_passwd.c_str())){
+int OnvifDevice::getRTSPUrl(string& rtspUrl){
+    int result = 0;
+    std::string mediaAddr;
+    result = getMediaUrl(mediaAddr);
+    if (SOAP_OK != result){	
+          return -1;
+    }
+    MediaBindingProxy proxyMedia;
+    proxyMedia.soap_endpoint = mediaAddr.c_str();
+    soap_register_plugin(proxyMedia.soap, soap_wsse);
+	  if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyMedia.soap, NULL, m_username.c_str(), m_passwd.c_str())){
 		return -1;
-	}
-  tt__Transport               transport;
-  transport.Tunnel = NULL;
-  transport.Protocol = tt__TransportProtocol__RTSP;
-  tt__StreamSetup             setup;
-  setup.Transport = &transport;
-  setup.Stream = tt__StreamType__RTP_Unicast;
-  _trt__GetStreamUri          StreamUri_req;
-  _trt__GetStreamUriResponse  StreamUri_rep;
-  StreamUri_req.StreamSetup = &setup;
-  string profileToken;
-  getProfile(mediaAddr,profileToken);
-  StreamUri_req.ProfileToken = profileToken;
-  int result = proxyMedia.GetStreamUri(mediaAddr, NULL, &StreamUri_req, &StreamUri_rep);
-  if (SOAP_OK != result){
-      return -1;
-  }
-  rtspUrl = StreamUri_rep.MediaUri->Uri;
-  return SOAP_OK;
+    }
+    tt__Transport               transport;
+    transport.Tunnel = NULL;
+    transport.Protocol = tt__TransportProtocol__RTSP;
+    tt__StreamSetup             setup;
+    setup.Transport = &transport;
+    setup.Stream = tt__StreamType__RTP_Unicast;
+    _trt__GetStreamUri          StreamUri_req;
+    _trt__GetStreamUriResponse  StreamUri_rep;
+    StreamUri_req.StreamSetup = &setup;
+    string profileToken;
+    getProfile(profileToken);
+    StreamUri_req.ProfileToken = profileToken;
+    result = proxyMedia.GetStreamUri(proxyMedia.soap_endpoint, NULL, &StreamUri_req, &StreamUri_rep);
+    if (SOAP_OK != result){
+        return -1;
+    }
+    rtspUrl = StreamUri_rep.MediaUri->Uri;
+    return SOAP_OK;
 }
 /************************************************************************
 **函数：getIMAGEUrl
 **功能：获取图像抓拍地址
 ************************************************************************/
-int OnvifDevice::getIMAGEUrl(const char* mediaAddr,string& imageUrl){
-  if(mediaAddr==NULL){
-    return -1;
-  }
-  MediaBindingProxy proxyMedia;
-  proxyMedia.soap_endpoint = mediaAddr;
-  soap_register_plugin(proxyMedia.soap, soap_wsse);
-	if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyMedia.soap, NULL, m_username.c_str(), m_passwd.c_str())){
+int OnvifDevice::getIMAGEUrl(string& imageUrl){
+    int result = 0;
+    std::string mediaAddr;
+    result = getMediaUrl(mediaAddr);
+    if (SOAP_OK != result){	
+          return -1;
+    }
+    MediaBindingProxy proxyMedia;
+    proxyMedia.soap_endpoint = mediaAddr.c_str();
+    soap_register_plugin(proxyMedia.soap, soap_wsse);
+	  if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyMedia.soap, NULL, m_username.c_str(), m_passwd.c_str())){
 		return -1;
-	}
-  _trt__GetSnapshotUri         ImageUri_req;
-  _trt__GetSnapshotUriResponse ImageUri_rep;
-  string profileToken;
-  getProfile(mediaAddr,profileToken);
-  ImageUri_req.ProfileToken = profileToken;
-  int result = proxyMedia.GetSnapshotUri(mediaAddr, NULL, &ImageUri_req, &ImageUri_rep);
-  if (SOAP_OK != result){
-      return -1;
-  }
-  imageUrl = ImageUri_rep.MediaUri->Uri;
-  return SOAP_OK;
+	  }
+    _trt__GetSnapshotUri         ImageUri_req; 
+    _trt__GetSnapshotUriResponse ImageUri_rep;
+    string profileToken;
+    getProfile(profileToken);
+    ImageUri_req.ProfileToken = profileToken;
+    result = proxyMedia.GetSnapshotUri(proxyMedia.soap_endpoint, NULL, &ImageUri_req, &ImageUri_rep);
+    if (SOAP_OK != result){
+        return -1;
+    }
+    imageUrl = ImageUri_rep.MediaUri->Uri;
+    return SOAP_OK;
 }
 /************************************************************************
 **函数：getProfile
 **功能：获取profileToken
 ************************************************************************/
-int OnvifDevice::getProfile(const char*mediaAddr, string& profileToken){
-    if(mediaAddr==NULL){
-        return -1;
+int OnvifDevice::getProfile(string& profileToken){
+    int result = 0;
+    std::string mediaAddr;
+    result = getMediaUrl(mediaAddr);
+    if (SOAP_OK != result){	
+          return -1;
     }
     MediaBindingProxy proxyMedia;
-    proxyMedia.soap_endpoint = mediaAddr;
+    proxyMedia.soap_endpoint = mediaAddr.c_str();
     soap_register_plugin(proxyMedia.soap, soap_wsse);
     if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyMedia.soap, NULL, m_username.c_str(), m_passwd.c_str())){
 		return -1;
@@ -268,7 +368,7 @@ int OnvifDevice::getProfile(const char*mediaAddr, string& profileToken){
     _trt__GetProfiles           Profiles_req;
     //存储的是获取回来的信息
     _trt__GetProfilesResponse   Profiles_rep;
-    int result = proxyMedia.GetProfiles(mediaAddr, NULL, &Profiles_req, &Profiles_rep);
+    result = proxyMedia.GetProfiles(proxyMedia.soap_endpoint, NULL, &Profiles_req, &Profiles_rep);
     if (SOAP_OK != result){	
           return -1;
     }
@@ -290,7 +390,7 @@ int OnvifDevice::getDateTime(int& year, int& month, int& day,
 	  }
     _tds__GetSystemDateAndTime         GetTm_req;
     _tds__GetSystemDateAndTimeResponse GetTm_rep;
-    int result = proxyDevice.GetSystemDateAndTime(m_deviceurl.c_str(), NULL, &GetTm_req, &GetTm_rep);
+    int result = proxyDevice.GetSystemDateAndTime(proxyDevice.soap_endpoint, NULL, &GetTm_req, &GetTm_rep);
     if (SOAP_OK != result){	
           return -1;
     }
@@ -315,7 +415,6 @@ int OnvifDevice::setDateTime(){
 	  }
     _tds__SetSystemDateAndTime           SetTm_req;
     _tds__SetSystemDateAndTimeResponse   SetTm_rep;
-    
     time_t t = time(NULL);     
     tm *stm = gmtime(&t);
     //给需要添加值的变量先创建空间
@@ -329,7 +428,7 @@ int OnvifDevice::setDateTime(){
     SetTm_req.UTCDateTime->Time->Hour   = stm->tm_hour;
     SetTm_req.UTCDateTime->Time->Minute = stm->tm_min;
     SetTm_req.UTCDateTime->Time->Second = stm->tm_sec;
-    int result = proxyDevice.SetSystemDateAndTime(m_deviceurl.c_str(), NULL, &SetTm_req, &SetTm_rep);
+    int result = proxyDevice.SetSystemDateAndTime(proxyDevice.soap_endpoint, NULL, &SetTm_req, &SetTm_rep);
     if (SOAP_OK != result){	
           return -1;
     }
@@ -340,28 +439,20 @@ int OnvifDevice::setDateTime(){
 **功能：获取Media地址
 ************************************************************************/
 int OnvifDevice::getMediaUrl(string& mediaAddr){
-  DeviceBindingProxy proxyDevice;
-  proxyDevice.soap_endpoint = m_deviceurl.c_str();
-	soap_register_plugin(proxyDevice.soap, soap_wsse);
-	if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyDevice.soap, NULL, m_username.c_str(), m_passwd.c_str())){
+    DeviceBindingProxy proxyDevice;
+    proxyDevice.soap_endpoint = m_deviceurl.c_str();
+	  soap_register_plugin(proxyDevice.soap, soap_wsse);
+	  if (SOAP_OK != soap_wsse_add_UsernameTokenDigest(proxyDevice.soap, NULL, m_username.c_str(), m_passwd.c_str())){
 		return -1;
-	}
-  _tds__GetCapabilities           Bilities_req;
-  _tds__GetCapabilitiesResponse   Bilities_rep;
-  int result = proxyDevice.GetCapabilities(m_deviceurl.c_str(), NULL, &Bilities_req, &Bilities_rep);
-  if (SOAP_OK != result)
-  {
-      return -1;
-  }
-  else{
-    if (Bilities_rep.Capabilities == NULL
-      || Bilities_rep.Capabilities->Media == NULL)
-    {
-      return -1;
     }
-  }
-  mediaAddr = Bilities_rep.Capabilities->Media->XAddr;
-  return SOAP_OK;
+    _tds__GetCapabilities           Bilities_req;
+    _tds__GetCapabilitiesResponse   Bilities_rep;
+    int result = proxyDevice.GetCapabilities(proxyDevice.soap_endpoint, NULL, &Bilities_req, &Bilities_rep);
+    if (SOAP_OK != result){
+        return -1;
+    }
+    mediaAddr = Bilities_rep.Capabilities->Media->XAddr;
+    return SOAP_OK;
 }
 /************************************************************************
 **函数：getPTZUrl
@@ -376,14 +467,9 @@ int OnvifDevice::getPTZUrl(string& PTZAddr){
     }
     _tds__GetCapabilities           Bilities_req;
     _tds__GetCapabilitiesResponse   Bilities_rep;
-    int result = proxyDevice.GetCapabilities(m_deviceurl.c_str(), NULL, &Bilities_req, &Bilities_rep);
+    int result = proxyDevice.GetCapabilities(proxyDevice.soap_endpoint, NULL, &Bilities_req, &Bilities_rep);
     if (SOAP_OK != result){
 		return -1;
-    }
-    else{
-        if (Bilities_rep.Capabilities == NULL || Bilities_rep.Capabilities->PTZ == NULL){
-          return -1;
-        }
     }
     PTZAddr = Bilities_rep.Capabilities->PTZ->XAddr;
     return SOAP_OK;
@@ -403,7 +489,7 @@ int OnvifDevice::getDeviceInformation(string& Manufacturer,string& Model,string&
     _tds__GetDeviceInformation           devinfo_req;
     _tds__GetDeviceInformationResponse   devinfo_resp;
 
-    int result = proxyDevice.GetDeviceInformation(m_deviceurl.c_str(), NULL, &devinfo_req, &devinfo_resp);
+    int result = proxyDevice.GetDeviceInformation(proxyDevice.soap_endpoint, NULL, &devinfo_req, &devinfo_resp);
     if (SOAP_OK != result){
         return -1;
     }

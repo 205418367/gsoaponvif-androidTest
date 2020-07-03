@@ -15,6 +15,10 @@
 #define ZOOMIN 4
 #define ZOOMOUT 5
 #define speed 1
+#define GOTO 0
+#define SET 1
+#define REMOVE 2
+
 #define MAX_HOSTNAME_LEN 128
 #define MAX_LOGMSG_LEN 256 
 
@@ -23,7 +27,7 @@
 #define SOAP_MCAST_ADDR "soap.udp://239.255.255.250:3702"                       // onvif规定的组播地址
 #define SOAP_ITEM       ""                                                      // 寻找的设备范围
 #define SOAP_TYPES      "dn:NetworkVideoTransmitter"                            // 寻找的设备类型
-
+#define GET 3
 using namespace std;
 class OnvifDevice{
 public:
@@ -39,9 +43,11 @@ public:
   int ptzContinuousMove(int command);
   int ptzContinuousStop();
   int ptzRelativeMove(int command);
-  int getProfile(const char *mediaAddr, string& profileToken);
-  int getRTSPUrl(const char *mediaAddr, string& rtspUrl);
-  int getIMAGEUrl(const char *mediaAddr,string& imageUrl);
+  int getProfile(string& profileToken);
+  int getRTSPUrl(string& rtspUrl);
+  int getIMAGEUrl(string& imageUrl);
+  int ptzPreset(int command, string presettoken);
+  int ptzPresetTour(vector<string> &PresetToken);
 private:
   string m_deviceurl;
   string m_username;

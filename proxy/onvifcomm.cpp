@@ -11,12 +11,13 @@ void OnvifComm::make_uri_withauth(char* src_uri, char* username, char* password,
 }
 
 int OnvifComm::open_rtsp(char* uri_auth){
-    int result = 0;
-    AVPacket packet;
+    int re = 0;
     ofstream outfile;
+    av_register_all();
     avformat_network_init();
-    av_register_all(); 
     AVFormatContext* pFormatCtx=NULL;
+    AVPacket* packet = av_packet_alloc();
+	
     AVDictionary* options = NULL;
     av_dict_set(&options, "rtsp_transport", "tcp", 0);
     av_dict_set(&options, "stimeout", "2000000", 0);
@@ -25,14 +26,15 @@ int OnvifComm::open_rtsp(char* uri_auth){
     av_dump_format(pFormatCtx, 0, uri_auth, 0);
     outfile.open("vedio.dat", ios::out | ios::trunc );
     
-    while (true){
-		result = av_read_frame(pFormatCtx, &packet); 
-           if (result != 0){
-			return result;
-		}
-           outfile << &packet << endl;
+    for(;;){
+	re = av_read_frame(pFormatCtx, packet); 
+        if (re != 0){
+            return re;
+	}
+        outfile << packet << endl;
+        av_packet_unref(packet);	    
     }
-    outfile.close();
     avformat_close_input(&pFormatCtx);
-    return result;        
+    outfile.close();
+    return re;        
 }
