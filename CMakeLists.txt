@@ -33,14 +33,14 @@ set(Onvifobj
     gsoap-onvif/onvif/wsdd.nsmap
     )
 
-link_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rdlib/armeabi-v7a/onvif) 
-link_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rdlib/armeabi-v7a/openssl)
+#link_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rdlib/arm64-v8a/onvif) 
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rdlib/arm64-v8a/openssl)
 #add_executable(client proxy/main.cpp proxy/onvifdevice.cpp 
 #	        proxy/onvifcomm.cpp ${ProxyOBJ} ${PluginOBJ} ${Onvifobj})
-#add_library(onvifdevice SHARED gsoap-onvif/source/onvifdevice.cpp ${ProxyOBJ} ${PluginOBJ} ${Onvifobj})
-#target_link_libraries(onvifdevice ssl crypto)
+add_library(onvifdevice SHARED onvifdevice.cpp ${ProxyOBJ} ${PluginOBJ} ${Onvifobj})
+target_link_libraries(onvifdevice ssl crypto)
 
-add_executable(client main.cpp ${ProxyOBJ} ${PluginOBJ} ${Onvifobj})
-target_link_libraries(client ssl crypto onvifdevice)
-set_target_properties(client PROPERTIES OUTPUT_NAME "client")
-install(TARGETS client DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/build)     
+#add_executable(client main.cpp ${ProxyOBJ} ${PluginOBJ} ${Onvifobj})
+#target_link_libraries(client ssl crypto onvifdevice)
+set_target_properties(onvifdevice PROPERTIES OUTPUT_NAME "onvifdevice")
+install(TARGETS onvifdevice DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/build)     

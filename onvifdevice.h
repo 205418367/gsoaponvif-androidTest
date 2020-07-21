@@ -44,7 +44,7 @@ public:
 /************************************************************************
 **函数：ptzContinuousMove
 **功能：控制相机持续转动
-**command：UP DOWN LEFT RIGHT ZOOMIN ZOOMOUT s
+**command：UP DOWN LEFT RIGHT ZOOMIN ZOOMOUT
 ************************************************************************/
   int ptzContinuousMove(int command);
 
