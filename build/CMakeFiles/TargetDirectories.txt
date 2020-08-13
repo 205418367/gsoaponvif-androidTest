@@ -1,3 +1,0 @@
-/home/lichen/project/gsoap-onvif/build/CMakeFiles/rebuild_cache.dir
-/home/lichen/project/gsoap-onvif/build/CMakeFiles/client.dir
-/home/lichen/project/gsoap-onvif/build/CMakeFiles/edit_cache.dir
