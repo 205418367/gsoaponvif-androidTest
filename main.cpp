@@ -15,39 +15,38 @@ int main(){
             //continue;
 
         //cout<<"####"<<*it<<"####"<<endl;
-        string it = "http://192.168.8.220/onvif/device_service";
+        string it = "http://192.168.1.104/onvif/device_service";
         string user = "admin";
-        string pass = "leinao123"
+        string pass = "123456";
         OnvifPTZ OnvifPTZ(it, user, pass);
 
-        int speed;
-        OnvifPTZ.setPtzMoveSpeed(2);
-        OnvifPTZ.getPtzMoveSpeed(speed);
-        cout<<"speed: "<<speed<<endl;
+        //int speed;
+        //OnvifPTZ.setPtzMoveSpeed(2);
+        //OnvifPTZ.getPtzMoveSpeed(speed);
+        //cout<<"speed: "<<speed<<endl;
         //ImagingSet imageSet;
         //OnvifPTZ.ptzContinuousMove(LEFT);
         //OnvifPTZ.ptzContinuousStop();
-	//OnvifPTZ.ptzRelativeMove(LEFT);
-        //OnvifPTZ.SetPreset("2","onvif");
-        //vector<PreInfo> allpresets;
-        //OnvifPTZ.GetAllPresets(allpresets);
-        //for (int i=0;i<allpresets.size();i++){
-            //PreInfo preset = allpresets[i];
-	    //cout<<"name :"<<preset.name<<endl;
-            //cout<<"token :"<<preset.token<<endl;
-            //cout<<"p :"<<preset.p<<endl;
-            //cout<<"t :"<<preset.t<<endl;
-            //cout<<"z :"<<preset.z<<endl;
-        //}
+	//OnvifPTZ.ptzRelativeMove(UP);
+        //sleep(3);
+        OnvifPTZ.SetPreset("3","onvif");
+        vector<PreInfo> allpresets;
+        OnvifPTZ.GetAllPresets(allpresets);
+        for (int i=0;i<allpresets.size();i++){
+            PreInfo preset = allpresets[i];
+	    cout<<"name :"<<preset.name<<endl;
+            cout<<"token :"<<preset.token<<endl;
+            cout<<"p :"<<preset.p<<endl;
+            cout<<"t :"<<preset.t<<endl;
+            cout<<"z :"<<preset.z<<endl;
+        }
 
-        OnvifImaging Imaging(it, user, pass);
-        ImagingSet imageSet;
-        Imaging.GetImagingSettings(imageSet);
-        cout<<"ExposureTime: "<<imageSet.ExposureTime<<endl;
+        //OnvifImaging Imaging(it, user, pass);
+        //ImagingSet imageSet;
+        //Imaging.GetImagingSettings(imageSet);
+        //cout<<"ExposureTime: "<<imageSet.ExposureTime<<endl;
       
         //onvifDevice.SetImagingSettings();
-        
-        
         //string videoSourceToken;
         //onvifDevice.GetVideoSources(videoSourceToken);
         //cout<<"video :"<<videoSourceToken<<endl;
