@@ -152,7 +152,7 @@ int OnvifDevice::SetImagingSettings(){
 }
 
 
-int OnvifDevice::GetOnePresets(const string& pretoken,float& x,float& y,float& z,string& prename){  
+int OnvifDevice::GetOnePresets(const string& pretoken,string& prename,float& p,float& t,float& z){  
     PTZBindingProxy proxyPTZ;
     proxyPTZ.soap_endpoint = PTZAddr.c_str();
     soap_register_plugin(proxyPTZ.soap, soap_wsse);
@@ -172,9 +172,9 @@ int OnvifDevice::GetOnePresets(const string& pretoken,float& x,float& y,float& z
 	if (((*token)==pretoken)){
 	   tt__Vector2D* PanTilt = response.Preset[i]->PTZPosition->PanTilt;
 	   tt__Vector1D* Zoom = response.Preset[i]->PTZPosition->Zoom;
-           prename = *name;
-	   x = PanTilt->x;
-	   y = PanTilt->y;
+           prename = (*name).erase(0, 2);
+	   p = PanTilt->x;
+	   t = PanTilt->y;
            z = Zoom->x;
 	}
     }

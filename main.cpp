@@ -31,16 +31,23 @@ int main(){
 	//OnvifPTZ.ptzRelativeMove(UP);
         //sleep(3);
         //OnvifPTZ.SetPreset("3","onvif");
-        vector<PreInfo> allpresets;
-        onvifdevice.GetAllPresets(allpresets);
-        for (int i=0;i<allpresets.size();i++){
-            PreInfo preset = allpresets[i];
-	    cout<<"name :"<<preset.name<<endl;
-            cout<<"token :"<<preset.token<<endl;
-            cout<<"p :"<<preset.p<<endl;
-            cout<<"t :"<<preset.t<<endl;
-            cout<<"z :"<<preset.z<<endl;
-        }
+        //vector<PreInfo> allpresets;
+        //onvifdevice.GetAllPresets(allpresets);
+        //for (int i=0;i<allpresets.size();i++){
+        //    PreInfo preset = allpresets[i];
+	//    cout<<"name :"<<preset.name<<endl;
+        //    cout<<"token :"<<preset.token<<endl;
+        //    cout<<"p :"<<preset.p<<endl;
+        //    cout<<"t :"<<preset.t<<endl;
+        //    cout<<"z :"<<preset.z<<endl;
+        //}
+        float x,y,z;
+        string prename;
+        onvifdevice.GetOnePresets("5",prename,x,y,z);
+        cout<<"prename: "<<prename<<endl;
+        cout<<"x: "<<x<<endl;
+        cout<<"y: "<<x<<endl;
+        cout<<"z: "<<x<<endl;
 
         //OnvifImaging Imaging(it, user, pass);
         //ImagingSet imageSet;

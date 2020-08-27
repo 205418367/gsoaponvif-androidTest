@@ -1,0 +1,3 @@
+/home/lichen/project/gsoaponvif-androidTest/build/CMakeFiles/rebuild_cache.dir
+/home/lichen/project/gsoaponvif-androidTest/build/CMakeFiles/edit_cache.dir
+/home/lichen/project/gsoaponvif-androidTest/build/CMakeFiles/client.dir
