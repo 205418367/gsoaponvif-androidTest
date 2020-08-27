@@ -86,7 +86,7 @@ int OnvifPTZ::GetAllPresets(std::vector<PreInfo>& allpresets){
 
            PreInfo preinfo;
 	   preinfo.token = *token;
-           preinfo.name = *name;
+           preinfo.name = *name.erase(0, 2);
            preinfo.p = x;
            preinfo.t = y;
            preinfo.z = z;

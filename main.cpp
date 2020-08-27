@@ -1,5 +1,6 @@
-#include "OnvifPTZ.h"
-#include "OnvifImaging.h"
+//#include "OnvifPTZ.h"
+//#include "OnvifImaging.h"
+#include "onvifdevice.h"
 #include <unistd.h>
 #include <vector>
 
@@ -15,10 +16,10 @@ int main(){
             //continue;
 
         //cout<<"####"<<*it<<"####"<<endl;
-        string it = "http://192.168.1.104/onvif/device_service";
+        string it = "http://192.168.8.220/onvif/device_service";
         string user = "admin";
-        string pass = "123456";
-        OnvifPTZ OnvifPTZ(it, user, pass);
+        string pass = "leinao123";
+        OnvifDevice onvifdevice(it,user,pass);        
 
         //int speed;
         //OnvifPTZ.setPtzMoveSpeed(2);
@@ -29,9 +30,9 @@ int main(){
         //OnvifPTZ.ptzContinuousStop();
 	//OnvifPTZ.ptzRelativeMove(UP);
         //sleep(3);
-        OnvifPTZ.SetPreset("3","onvif");
+        //OnvifPTZ.SetPreset("3","onvif");
         vector<PreInfo> allpresets;
-        OnvifPTZ.GetAllPresets(allpresets);
+        onvifdevice.GetAllPresets(allpresets);
         for (int i=0;i<allpresets.size();i++){
             PreInfo preset = allpresets[i];
 	    cout<<"name :"<<preset.name<<endl;

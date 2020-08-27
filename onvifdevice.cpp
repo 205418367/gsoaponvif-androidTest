@@ -1,5 +1,9 @@
 #include "onvifdevice.h"
+#include "stdio.h"
+#include "wsdd.nsmap"
 #include "wsseapi.h"
+#include "wsaapi.h"
+#include "ErrorLog.h"
 #include "soapDeviceBindingProxy.h"
 #include "soapMediaBindingProxy.h"
 #include "soapPTZBindingProxy.h"
@@ -205,7 +209,7 @@ int OnvifDevice::GetAllPresets(vector<PreInfo>& allpresets){
 
            PreInfo preinfo;
 	   preinfo.token = *token;
-           preinfo.name = *name;
+           preinfo.name = (*name).erase(0, 2);
            preinfo.p = x;
            preinfo.t = y;
            preinfo.z = z;
@@ -232,7 +236,6 @@ int OnvifDevice::SetPreset(string presetToken,string presetName){
     preset.PresetToken = &presetToken;
     int result = proxyPTZ.SetPreset(proxyPTZ.soap_endpoint,NULL,&preset, &response);
     if (SOAP_OK != result){
-         cout<<"SET FAIL"<<endl;
          return -1;
     }
     proxyPTZ.destroy();
@@ -260,7 +263,6 @@ int OnvifDevice::ptzPreset(int command, string presetToken){
         preset.Speed->Zoom = soap_new_tt__Vector1D(proxyPTZ.soap, -1);
         result = proxyPTZ.GotoPreset(proxyPTZ.soap_endpoint,NULL,&preset, &response);
         if (SOAP_OK != result){
-            cout<<"GOTO FAIL"<<endl;
             return -1;
         }
         cout<<"GOTO SUCC"<<endl;
@@ -271,10 +273,8 @@ int OnvifDevice::ptzPreset(int command, string presetToken){
         preset.PresetToken = presetToken;
         result = proxyPTZ.RemovePreset(proxyPTZ.soap_endpoint,NULL,&preset, &response);
         if (SOAP_OK != result){
-             cout<<"REMOVE FAIL"<<endl;
              return -1;
          }
-         cout<<"REMOVE SUCC"<<endl;
     }
     proxyPTZ.destroy();
     return SOAP_OK;
@@ -415,8 +415,8 @@ int OnvifDevice::ptzContinuousMove(int command){
     	continuousMove.Velocity->PanTilt->y = -((float)ptzMoveSpeed / 7);
     	break;
     case RIGHTUP:
-    	continuousMove.Velocity->PanTilt->x = ((float)ptzMoveSpeed / 7);
-    	continuousMove.Velocity->PanTilt->y = ((float)ptzMoveSpeed / 7);
+    	continuousMove.Velocity->PanTilt->x = ((float)ptzMoveSpeed / 5);
+    	continuousMove.Velocity->PanTilt->y = ((float)ptzMoveSpeed / 5);
     	break;
     case RIGHTDOWN:
     	continuousMove.Velocity->PanTilt->x = ((float)ptzMoveSpeed / 7);
@@ -754,3 +754,4 @@ void detectDevice(vector<string>& vecDevAddr){
     soap_destroy(soap);
     soap_end(soap);
 }
+

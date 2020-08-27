@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 project(ONVIF_CLEINT)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -o0 -g -ggdb -Wall -w -fPIC -fno-use-cxa-atexit -fexceptions")
@@ -33,8 +33,9 @@ set(PluginOBJ
     gsoap-onvif/onvif/wsdd.nsmap
     )
 set(Onvifobj
-    gsoap-onvif/OnvifPTZ.cpp
-    gsoap-onvif/OnvifImaging.cpp
+    #gsoap-onvif/OnvifPTZ.cpp
+    #gsoap-onvif/OnvifImaging.cpp
+    onvifdevice.cpp
     )
 
 #link_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rdlib/linux)
