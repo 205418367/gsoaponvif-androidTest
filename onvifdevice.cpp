@@ -178,6 +178,7 @@ int OnvifDevice::SetImagingSettings(int command, ImagingSet& imageSet){
 }
 
 // c++ return 只能返回一个值；数值类型只用于右值就不需要引用
+// 对传入的变量名称最好要改动
 PreInfo calculatePTZ(PreInfo& _preinfo,float x,float y,float z){
     float p,t,zo;
     // x
@@ -228,6 +229,7 @@ int OnvifDevice::GetOnePresets(const string& pretoken,PreInfo& preinfo){
             float x = PanTilt->x;
             float y = PanTilt->y;
             float z = Zoom->x;
+            // 对传入的变量更新值
             preinfo = calculatePTZ(preinfo,x,y,z);
         }
     }
