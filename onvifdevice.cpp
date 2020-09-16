@@ -178,8 +178,7 @@ int OnvifDevice::SetImagingSettings(int command, ImagingSet& imageSet){
 }
 
 // c++ return 只能返回一个值；数值类型只用于右值就不需要引用
-// 对传入的变量名称最好要改动
-PreInfo calculatePTZ(PreInfo& _preinfo,float x,float y,float z){
+PreInfo calculatePTZ(PreInfo& info,float x,float y,float z){
     float p,t,zo;
     // x
     if(x==0.0){
@@ -199,10 +198,10 @@ PreInfo calculatePTZ(PreInfo& _preinfo,float x,float y,float z){
     }
     // z
     zo = (z-10.0)/290.0;
-    _preinfo.p = p;
-    _preinfo.t = t;
-    _preinfo.z = zo;
-    return _preinfo;
+    info.p = p;
+    info.t = t;
+    info.z = zo;
+    return info;
 }
 
 int OnvifDevice::GetOnePresets(const string& pretoken,PreInfo& preinfo){
@@ -225,12 +224,12 @@ int OnvifDevice::GetOnePresets(const string& pretoken,PreInfo& preinfo){
         if (((*token)==pretoken)){
             tt__Vector2D* PanTilt = response.Preset[i]->PTZPosition->PanTilt;
             tt__Vector1D* Zoom = response.Preset[i]->PTZPosition->Zoom;
-            preinfo.name = (*name).erase(0, 2);
+            PreInfo info;
+            info.name = (*name).erase(0, 2);
             float x = PanTilt->x;
             float y = PanTilt->y;
             float z = Zoom->x;
-            // 对传入的变量更新值
-            preinfo = calculatePTZ(preinfo,x,y,z);
+            preinfo = calculatePTZ(info,x,y,z);
         }
     }
     proxyPTZ.destroy();
